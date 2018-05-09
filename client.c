@@ -121,8 +121,21 @@ int main(int argc, char *argv[] ){
                 
             }
             else{		
+                if(counter == 0 && settrigger == 0){
+                    printf("bet? ");
+                    scanf("%s", buffer);
+                    bytes = strlen(buffer) + 1;
+                    trnmsize = send(fd, buffer, bytes, flags);
+                    if (trnmsize < 0) {
+                        fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
+                        exit(6);
+                    }
+                    settrigger = 1;
+                    continue;
+                }
                 settrigger = 0;
                 counter++;
+                
                 printf("\nmore or enough? ");
                 scanf("%s", buffer);
                 bytes = strlen(buffer) + 1;

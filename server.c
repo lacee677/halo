@@ -110,6 +110,7 @@ int main(int argc, char *argv[] ){
         user1sum = 0;
         user2sum = 0;
         banksum = 0;
+        newgame = 0;
 
         /* FIRST USER GETS FIRST CARD */
         user1sum += cards[ random[counter] ];
@@ -140,7 +141,27 @@ int main(int argc, char *argv[] ){
         banksum += cards[ random[counter] ];
         counter++;
 
-        /* USER 1 TURN START */
+
+        /* USER 1 BET */ 
+        rcvsize = recv( fdc, buffer, buffersize, flags );
+        if (rcvsize <= 0) {
+            fprintf(stderr, "%s: Cannot receive from the socket\n",argv[0]);
+            exit(7);
+        }
+        user1bet = strtol(buffer, NULL, 10);
+        printf("bytes for server: %d,  %s\n", rcvsize-1, buffer);
+
+        /* SEND USER1 SIGNAL FOR HIS/HER TURN TO START */
+        sprintf(buffer,"%s", "bet accepted");
+        bytes = strlen(buffer) + 1;
+        trnmsize = send(fdc, buffer, bytes, flags);
+        if (trnmsize < 0) {
+            fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
+            exit(6);
+        }
+        printf("bytes for server: %d,  %s\n", rcvsize-1, buffer);
+
+        /* USER 1 TURN */
         while(1){
 
             // [0]who(0 bank, 1 you, 2 other client),
@@ -185,7 +206,6 @@ int main(int argc, char *argv[] ){
                         
             printf("loop end \n");
         }
-        /* USER 1 TURN END */
 
         /* SEND USER2 SIGNAL FOR HIS/HER TURN */
         sprintf(buffer,"%s", "your turn");
@@ -197,6 +217,7 @@ int main(int argc, char *argv[] ){
         }
         printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
 
+        /* USER2 BET */
         rcvsize = recv( fdco, buffer, buffersize, flags );
         if (rcvsize <= 0) {
             fprintf(stderr, "%s: Cannot receive from the socket\n",argv[0]);
@@ -261,213 +282,18 @@ int main(int argc, char *argv[] ){
             printf("loop end \n");
         }
 
-        /* EVALUATE GAME */
-        if(user1sum < 21 && user2sum < 21){
-            if( (user1sum == user2sum && user1sum > banksum && user2sum > banksum )  || 
-                ( user1sum == banksum && user2sum == banksum ) ){
-                sprintf(buffer,"1%d3", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user1sum > banksum && user2sum < banksum){
-                sprintf(buffer,"1%d1", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user1sum < banksum && user2sum > banksum){
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d1", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user2sum > banksum && user1sum < banksum){
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d1", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user2sum < banksum && user1sum > banksum){
-                sprintf(buffer,"1%d1", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user1sum > banksum && user2sum == banksum){
-                    sprintf(buffer,"1%d1", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d3", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user2sum > banksum && user1sum == banksum){
-                sprintf(buffer,"1%d3", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d1", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user2sum < banksum && user1sum < banksum){
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if( user2sum > banksum && user1sum > banksum){
-                if(user2sum > user1sum){
-                    sprintf(buffer,"1%d2", 9);
-                    bytes = strlen(buffer) + 1;
-                    trnmsize = send(fdc, buffer, bytes, flags);
-                    if (trnmsize < 0) {
-                        fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                        exit(6);
-                    }
-                    printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                    
-                    sprintf(buffer,"1%d1", 9);
-                    bytes = strlen(buffer) + 1;
-                    trnmsize = send(fdco, buffer, bytes, flags);
-                    if (trnmsize < 0) {
-                        fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                        exit(6);
-                    }
-                    printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                }
-                else{
-                    sprintf(buffer,"1%d1", 9);
-                    bytes = strlen(buffer) + 1;
-                    trnmsize = send(fdc, buffer, bytes, flags);
-                    if (trnmsize < 0) {
-                        fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                        exit(6);
-                    }
-                    printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                    
-                    sprintf(buffer,"1%d2", 9);
-                    bytes = strlen(buffer) + 1;
-                    trnmsize = send(fdco, buffer, bytes, flags);
-                    if (trnmsize < 0) {
-                        fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                        exit(6);
-                    }
-                    printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-                }
-            }
-            
+        /* BANK SUM CALCULATE */
+        r = rand () % 3 ;
+        for(int i = 0; i <= r; i++){
+            banksum += cards[ random[counter] ];
+            counter++;
         }
-        else{
-            if(user1sum == 21 && user2sum < banksum){
-                sprintf(buffer,"1%d2", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if(user2sum == 21 && user1sum < banksum){
+        printf("bank: %d \n", banksum);
+
+        /* EVALUATE GAME */
+        
+        if(user1sum < 21){
+            if(user1sum < banksum){
                 sprintf(buffer,"1%d2", 9);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdc, buffer, bytes, flags);
@@ -477,27 +303,7 @@ int main(int argc, char *argv[] ){
                 }
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
-            else if(user1sum == 21 && user2sum == banksum){
-                sprintf(buffer,"1%d3", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdco, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if(user2sum == 21 && user1sum == banksum){
-                sprintf(buffer,"1%d3", 9);
-                bytes = strlen(buffer) + 1;
-                trnmsize = send(fdc, buffer, bytes, flags);
-                if (trnmsize < 0) {
-                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
-                    exit(6);
-                }
-                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
-            }
-            else if(user1sum < 21 && user1sum < banksum){
+            else if(user1sum > banksum || banksum > 21){
                 sprintf(buffer,"1%d1", 9);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdc, buffer, bytes, flags);
@@ -507,7 +313,7 @@ int main(int argc, char *argv[] ){
                 }
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
-            else if(user1sum < 21 && user1sum == banksum){
+            else if(user1sum == banksum){
                 sprintf(buffer,"1%d3", 9);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdc, buffer, bytes, flags);
@@ -517,7 +323,19 @@ int main(int argc, char *argv[] ){
                 }
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
-            else if(user2sum < 21 && user2sum < banksum){
+        }
+        if(user2sum < 21){
+            if(user2sum < banksum){
+                sprintf(buffer,"1%d2", 9);
+                bytes = strlen(buffer) + 1;
+                trnmsize = send(fdco, buffer, bytes, flags);
+                if (trnmsize < 0) {
+                    fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
+                    exit(6);
+                }
+                printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
+            }
+            else if(user2sum > banksum || banksum > 21){
                 sprintf(buffer,"1%d1", 9);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdco, buffer, bytes, flags);
@@ -527,7 +345,7 @@ int main(int argc, char *argv[] ){
                 }
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
-            else if(user2sum < 21 && user2sum == banksum){
+            else if(user2sum == banksum){
                 sprintf(buffer,"1%d3", 9);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdco, buffer, bytes, flags);
