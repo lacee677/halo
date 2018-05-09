@@ -54,7 +54,7 @@ int main(int argc, char *argv[] ){
     };
 
     const int card_values[8] = { 7, 8, 9, 10, 2, 3, 4, 11 };
-    int counter, complete_value, settrigger;
+    int counter, complete_value, settrigger, money, finalmoney, clientdef = 0;
     int card_number[5] = {0};
 
     fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -74,10 +74,14 @@ int main(int argc, char *argv[] ){
 
     printf("Connected to the server %s:%i \n", server_addr, portnumber);
 
+    money = 5000;
+    printf("Starting money: %d\n", money);
+
     while(1){
         counter = 0;
         complete_value = 0;
         settrigger = 0;
+        finalmoney = 0;
         while(1){
             rcvsize = recv( fd, buffer, buffersize, flags );
             if (rcvsize <= 0) {
@@ -117,7 +121,10 @@ int main(int argc, char *argv[] ){
                     fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
                     exit(6);
                 }
+                money -= strtol(buffer, NULL, 10);
+                printf("Money left: %d\n", money);
                 settrigger = 1;
+                clientdef = 1;
                 
             }
             else{		
@@ -130,6 +137,8 @@ int main(int argc, char *argv[] ){
                         fprintf(stderr, "%s: Cannot send data to the client.\n",argv[0]);
                         exit(6);
                     }
+                    money -= strtol(buffer, NULL, 10);
+                    printf("Money left: %d\n", money);
                     settrigger = 1;
                     continue;
                 }
@@ -152,6 +161,9 @@ int main(int argc, char *argv[] ){
             }
         }
         if(complete_value < 21){
+            if(clientdef != 1){
+                printf("Waiting for other client to finish his/her round...\n");
+            }
             rcvsize = recv( fd, buffer, buffersize, flags );
             if (rcvsize <= 0) {
                 fprintf(stderr, "%s: Cannot receive from the socket\n",argv[0]);
@@ -171,6 +183,15 @@ int main(int argc, char *argv[] ){
             
             }
         }
+
+        counter = 3;
+        while( strchr("x", buffer[counter]) == 0 ){
+            finalmoney = finalmoney * 10 + ( buffer[counter] - '0' );
+            counter++;
+        }
+        money += finalmoney;
+
+        printf("Money left: %d\n", money);
 
         printf("New game (yes/no)? ");
         scanf("%s", buffer);

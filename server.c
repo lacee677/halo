@@ -109,6 +109,8 @@ int main(int argc, char *argv[] ){
         counter = 0;
         user1sum = 0;
         user2sum = 0;
+        user1bet = 0;
+        user2bet = 0;
         banksum = 0;
         newgame = 0;
 
@@ -148,8 +150,9 @@ int main(int argc, char *argv[] ){
             fprintf(stderr, "%s: Cannot receive from the socket\n",argv[0]);
             exit(7);
         }
-        user1bet = strtol(buffer, NULL, 10);
         printf("bytes for server: %d,  %s\n", rcvsize-1, buffer);
+        user1bet = strtol(buffer, NULL, 10);
+        printf("bet: %d\n", user1bet);
 
         /* SEND USER1 SIGNAL FOR HIS/HER TURN TO START */
         sprintf(buffer,"%s", "bet accepted");
@@ -187,10 +190,10 @@ int main(int argc, char *argv[] ){
             
             user1sum += cards[ random[counter] ];
             if(user1sum == 21){
-                sprintf(buffer,"1%d1", random[counter]);
+                sprintf(buffer,"1%d1%dx", random[counter], user1bet*2);
             }
             else if(user1sum > 21){
-                sprintf(buffer,"1%d2", random[counter]);
+                sprintf(buffer,"1%d2x", random[counter]);
             }
             else{
                 sprintf(buffer,"1%d0", random[counter]);
@@ -223,8 +226,9 @@ int main(int argc, char *argv[] ){
             fprintf(stderr, "%s: Cannot receive from the socket\n",argv[0]);
             exit(7);
         }
-        user2bet = strtol(buffer, NULL, 10);
         printf("bytes for server: %d,  %s\n", rcvsize-1, buffer);
+        user2bet = strtol(buffer, NULL, 10);
+        printf("bet: %d\n", user2bet);
 
         /* SEND USER2 SIGNAL FOR HIS/HER TURN TO START */
         sprintf(buffer,"%s", "bet accepted");
@@ -262,10 +266,10 @@ int main(int argc, char *argv[] ){
             
             user2sum += cards[ random[counter] ];
             if(user2sum == 21){
-                sprintf(buffer,"1%d1", random[counter]);
+                sprintf(buffer,"1%d1%dx", random[counter], user2bet*2 );
             }
             else if(user2sum > 21){
-                sprintf(buffer,"1%d2", random[counter]);
+                sprintf(buffer,"1%d2x", random[counter]);
             }
             else{
                 sprintf(buffer,"1%d0", random[counter]);
@@ -293,8 +297,8 @@ int main(int argc, char *argv[] ){
         /* EVALUATE GAME */
         
         if(user1sum < 21){
-            if(user1sum < banksum){
-                sprintf(buffer,"1%d2", 9);
+            if(user1sum < banksum && banksum <= 21){
+                sprintf(buffer,"192x");
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdc, buffer, bytes, flags);
                 if (trnmsize < 0) {
@@ -304,7 +308,7 @@ int main(int argc, char *argv[] ){
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
             else if(user1sum > banksum || banksum > 21){
-                sprintf(buffer,"1%d1", 9);
+                sprintf(buffer,"191%dx", user1bet*2 );
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdc, buffer, bytes, flags);
                 if (trnmsize < 0) {
@@ -314,7 +318,7 @@ int main(int argc, char *argv[] ){
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
             else if(user1sum == banksum){
-                sprintf(buffer,"1%d3", 9);
+                sprintf(buffer,"193%dx", user1bet);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdc, buffer, bytes, flags);
                 if (trnmsize < 0) {
@@ -325,8 +329,8 @@ int main(int argc, char *argv[] ){
             }
         }
         if(user2sum < 21){
-            if(user2sum < banksum){
-                sprintf(buffer,"1%d2", 9);
+            if(user2sum < banksum && banksum <= 21){
+                sprintf(buffer,"192x");
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdco, buffer, bytes, flags);
                 if (trnmsize < 0) {
@@ -336,7 +340,7 @@ int main(int argc, char *argv[] ){
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
             else if(user2sum > banksum || banksum > 21){
-                sprintf(buffer,"1%d1", 9);
+                sprintf(buffer,"191%dx", user2bet*2 );
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdco, buffer, bytes, flags);
                 if (trnmsize < 0) {
@@ -346,7 +350,7 @@ int main(int argc, char *argv[] ){
                 printf("bytes from server: %d, %s \n", trnmsize-1, buffer);
             }
             else if(user2sum == banksum){
-                sprintf(buffer,"1%d3", 9);
+                sprintf(buffer,"193%dx", user2bet);
                 bytes = strlen(buffer) + 1;
                 trnmsize = send(fdco, buffer, bytes, flags);
                 if (trnmsize < 0) {
