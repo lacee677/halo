@@ -56,7 +56,7 @@ int main(int argc, char *argv[] ){
         }
 
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof on);
-       setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *)&on, sizeof on);
+    setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *)&on, sizeof on);
 
     err = bind(fd, (struct sockaddr *) &server, server_size);
     if (err < 0) {
@@ -443,8 +443,8 @@ int main(int argc, char *argv[] ){
 
     printf("Closing server.\n");
 
-    close(fdc);
     close(fdco);
+    close(fdc);
     close(fd);
     exit(0);
 
